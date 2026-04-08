@@ -35,6 +35,7 @@ export const keywordSchema = z.object({
 export const competitorSchema = z.object({
   name: z.string().min(1, "Competitor name is required"),
   type: z.enum(["direct", "indirect", "benchmark"]),
+  industry_tags: z.array(z.string()).optional(),
 });
 
 export const alertSchema = z.object({

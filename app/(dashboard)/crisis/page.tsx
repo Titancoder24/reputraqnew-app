@@ -57,6 +57,22 @@ export default function CrisisPage() {
     fetchData();
   }, [dateRange]);
 
+  const [predictiveRisk, setPredictiveRisk] = useState<any>(null);
+  const [loadingPredictive, setLoadingPredictive] = useState(false);
+
+  const runPredictiveRisk = async () => {
+    setLoadingPredictive(true);
+    try {
+      const res = await fetch("/api/ai/predictive-risk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dateFrom: dateRange.from.toISOString(), dateTo: dateRange.to.toISOString() }),
+      });
+      if (res.ok) setPredictiveRisk(await res.json());
+    } catch { toast.error("Predictive analysis failed"); }
+    finally { setLoadingPredictive(false); }
+  };
+
   const runRiskAssessment = async () => {
     setAssessingRisk(true);
     try {
@@ -222,6 +238,65 @@ export default function CrisisPage() {
               title="No negative mentions"
               description="All clear in this period"
             />
+          )}
+        </CardContent>
+      </Card>
+      {/* Predictive Risk Scoring */}
+      <Card className="border border-purple-100 rounded-xl shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <TrendingDown className="w-5 h-5 text-purple-500" /> Predictive Risk Scoring
+            </CardTitle>
+            <Button onClick={runPredictiveRisk} disabled={loadingPredictive} size="sm" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
+              {loadingPredictive ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Predict Risks
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {predictiveRisk ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-purple-700">{predictiveRisk.risk_score}</p>
+                  <p className="text-xs text-gray-500">Risk Score</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  predictiveRisk.trend === "critical" ? "bg-red-100 text-red-700" :
+                  predictiveRisk.trend === "declining" ? "bg-amber-100 text-amber-700" :
+                  predictiveRisk.trend === "stable" ? "bg-gray-100 text-gray-700" :
+                  "bg-green-100 text-green-700"
+                }`}>
+                  {predictiveRisk.trend}
+                </span>
+              </div>
+              {predictiveRisk.predictions?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-1">Predicted Risks</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {predictiveRisk.predictions.map((p: string, i: number) => (
+                      <li key={i} className="text-sm text-gray-600">{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {predictiveRisk.factors?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {predictiveRisk.factors.map((f: any, i: number) => (
+                    <span key={i} className={`text-xs px-2 py-1 rounded-full border ${
+                      f.impact === "high" ? "border-red-200 text-red-700 bg-red-50" :
+                      f.impact === "medium" ? "border-amber-200 text-amber-700 bg-amber-50" :
+                      "border-gray-200 text-gray-600 bg-gray-50"
+                    }`}>
+                      {f.name} ({f.impact})
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Click &quot;Predict Risks&quot; for AI-powered predictive reputation risk analysis</p>
           )}
         </CardContent>
       </Card>

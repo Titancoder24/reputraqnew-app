@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
     const entityType = searchParams.get("entity_type");
     const entityName = searchParams.get("entity_name");
     const search = searchParams.get("search");
+    const region = searchParams.get("region");
+    const language = searchParams.get("language");
     const riskFlag = searchParams.get("risk_flag");
     const sort = searchParams.get("sort") || "collected_at";
 
@@ -102,6 +104,16 @@ export async function GET(request: NextRequest) {
     if (entityName) {
       countQuery = countQuery.eq("entity_name", entityName);
       dataQuery = dataQuery.eq("entity_name", entityName);
+    }
+
+    if (region) {
+      countQuery = countQuery.eq("region", region);
+      dataQuery = dataQuery.eq("region", region);
+    }
+
+    if (language) {
+      countQuery = countQuery.eq("language", language);
+      dataQuery = dataQuery.eq("language", language);
     }
 
     if (search) {

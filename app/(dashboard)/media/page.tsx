@@ -10,11 +10,25 @@ import { MentionCard } from "@/components/dashboard/mention-card";
 import { SentimentPieChart } from "@/components/charts/sentiment-pie-chart";
 import { PlatformBarChart } from "@/components/charts/platform-bar-chart";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { Search, Filter, ChevronLeft, ChevronRight, Newspaper } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Newspaper, Mic, MicOff } from "lucide-react";
 
 const sentimentFilters = ["All", "Positive", "Negative", "Neutral", "Mixed"];
 const sourceTypeFilters = ["All", "news", "organic", "discussion", "social", "video", "top_story"];
 const platformFilters = ["All", "google_news", "reddit", "twitter", "youtube", "linkedin", "quora", "web"];
+const regionFilters = [
+  { value: "All", label: "All Regions" },
+  { value: "IN", label: "IN (India)" },
+  { value: "US", label: "US (United States)" },
+  { value: "GB", label: "GB (United Kingdom)" },
+  { value: "AU", label: "AU (Australia)" },
+  { value: "SG", label: "SG (Singapore)" },
+];
+const languageFilters = [
+  { value: "All", label: "All Languages" },
+  { value: "en", label: "en (English)" },
+  { value: "hi", label: "hi (Hindi)" },
+  { value: "ta", label: "ta (Tamil)" },
+];
 
 export default function MediaPage() {
   const { dateRange } = useAppStore();
@@ -27,7 +41,27 @@ export default function MediaPage() {
   const [sourceType, setSourceType] = useState("All");
   const [platform, setPlatform] = useState("All");
   const [entityType, setEntityType] = useState("All");
+  const [region, setRegion] = useState("All");
+  const [language, setLanguage] = useState("All");
   const [riskOnly, setRiskOnly] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const startVoiceSearch = () => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearch(transcript);
+    };
+    recognition.start();
+  };
 
   const limit = 20;
   const totalPages = Math.ceil(total / limit);
@@ -49,6 +83,8 @@ export default function MediaPage() {
     if (platform !== "All") params.set("platform", platform);
     if (entityType !== "All") params.set("entity_type", entityType);
     if (search) params.set("search", search);
+    if (region !== "All") params.set("region", region);
+    if (language !== "All") params.set("language", language);
     if (riskOnly) params.set("risk_flag", "true");
 
     try {
@@ -63,7 +99,7 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, page, sentiment, sourceType, platform, entityType, search, riskOnly]);
+  }, [dateRange, page, sentiment, sourceType, platform, entityType, region, language, search, riskOnly]);
 
   const fetchSidebarStats = useCallback(async () => {
     const params = new URLSearchParams({
@@ -99,7 +135,7 @@ export default function MediaPage() {
   // Reset page on filter change
   useEffect(() => {
     setPage(1);
-  }, [sentiment, sourceType, platform, entityType, search, riskOnly, dateRange]);
+  }, [sentiment, sourceType, platform, entityType, region, language, search, riskOnly, dateRange]);
 
   return (
     <div className="flex gap-6">
@@ -109,15 +145,24 @@ export default function MediaPage() {
         <Card className="mb-4 border border-gray-200 rounded-xl shadow-sm">
           <CardContent className="p-4">
             <div className="flex flex-col gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search mentions..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+              {/* Search with Voice */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Search mentions... or use voice"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <button
+                  onClick={startVoiceSearch}
+                  className={`p-2 rounded-lg border transition ${isListening ? "bg-red-50 border-red-300 text-red-600 animate-pulse" : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"}`}
+                  title="Voice search"
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
               </div>
 
               {/* Filters row */}
@@ -168,6 +213,28 @@ export default function MediaPage() {
                   <option value="All">All Entities</option>
                   <option value="brand">Brand</option>
                   <option value="competitor">Competitor</option>
+                </select>
+
+                {/* Region */}
+                <select
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  {regionFilters.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+
+                {/* Language */}
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  {languageFilters.map((l) => (
+                    <option key={l.value} value={l.value}>{l.label}</option>
+                  ))}
                 </select>
 
                 {/* Risk flag */}

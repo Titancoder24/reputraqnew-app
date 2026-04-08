@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/select";
 import { CompetitorLineChart } from "@/components/charts/competitor-line-chart";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { BarChart3, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart3, Users, Loader2, Shield } from "lucide-react";
+import { toast } from "sonner";
 
 interface Competitor {
   id: string;
@@ -34,6 +36,8 @@ export default function ComparePage() {
   const [comparisonData, setComparisonData] = useState<ComparisonData | null>(null);
   const [loadingCompetitors, setLoadingCompetitors] = useState(true);
   const [loadingComparison, setLoadingComparison] = useState(false);
+  const [swot, setSwot] = useState<any>(null);
+  const [loadingSwot, setLoadingSwot] = useState(false);
 
   const brandName = org?.brand_name || "Your Brand";
 
@@ -84,7 +88,27 @@ export default function ComparePage() {
 
   useEffect(() => {
     fetchComparison();
+    setSwot(null); // Reset SWOT when competitor changes
   }, [fetchComparison]);
+
+  const runSwotAnalysis = async () => {
+    if (!selectedCompetitor) return;
+    setLoadingSwot(true);
+    try {
+      const res = await fetch("/api/ai/swot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          competitor_name: selectedCompetitor,
+          dateFrom: dateRange.from.toISOString(),
+          dateTo: dateRange.to.toISOString(),
+        }),
+      });
+      if (res.ok) setSwot(await res.json());
+      else toast.error("Failed to generate SWOT analysis");
+    } catch { toast.error("SWOT analysis failed"); }
+    finally { setLoadingSwot(false); }
+  };
 
   if (loadingCompetitors) {
     return (
@@ -192,6 +216,45 @@ export default function ComparePage() {
               title="No comparison data"
               description="Data will appear once scans have collected mention data for both entities"
             />
+          )}
+        </CardContent>
+      </Card>
+      {/* SWOT Analysis */}
+      <Card className="border border-gray-200 rounded-xl shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Shield className="w-5 h-5 text-brand-sky" /> SWOT Analysis
+            </CardTitle>
+            <Button onClick={runSwotAnalysis} disabled={loadingSwot} size="sm" className="bg-brand-sky hover:bg-brand-sky/90 text-white">
+              {loadingSwot ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Generate SWOT
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {swot ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-green-800 mb-2">Strengths</h4>
+                <ul className="space-y-1">{swot.strengths?.map((s: string, i: number) => <li key={i} className="text-sm text-green-700">+ {s}</li>)}</ul>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-red-800 mb-2">Weaknesses</h4>
+                <ul className="space-y-1">{swot.weaknesses?.map((s: string, i: number) => <li key={i} className="text-sm text-red-700">- {s}</li>)}</ul>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">Opportunities</h4>
+                <ul className="space-y-1">{swot.opportunities?.map((s: string, i: number) => <li key={i} className="text-sm text-blue-700">{s}</li>)}</ul>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-amber-800 mb-2">Threats</h4>
+                <ul className="space-y-1">{swot.threats?.map((s: string, i: number) => <li key={i} className="text-sm text-amber-700">{s}</li>)}</ul>
+              </div>
+              {swot.summary && <p className="text-sm text-gray-600 md:col-span-2 mt-2">{swot.summary}</p>}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Click &quot;Generate SWOT&quot; to get an AI-powered SWOT analysis comparing your brand vs {selectedCompetitor}</p>
           )}
         </CardContent>
       </Card>

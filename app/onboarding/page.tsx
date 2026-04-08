@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Activity, Building2, Users, Search, Plus, X, Loader2, ArrowRight, Check } from "lucide-react";
+import { Activity, Building2, Users, UserPlus, Search, Plus, X, Loader2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 
-const steps = ["Brand Setup", "Add Competitors", "Configure Keywords"];
+const steps = ["Brand Setup", "Key Spokespersons", "Add Competitors", "Configure Keywords"];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -24,11 +24,16 @@ export default function OnboardingPage() {
   const [region, setRegion] = useState("IN");
   const [language, setLanguage] = useState("en");
 
-  // Step 2: Competitors
+  // Step 2: Spokespersons
+  const [spokespersons, setSpokespersons] = useState<{ name: string; designation: string }[]>([]);
+  const [spName, setSpName] = useState("");
+  const [spDesignation, setSpDesignation] = useState("");
+
+  // Step 3: Competitors
   const [competitors, setCompetitors] = useState<{ name: string; type: string }[]>([]);
   const [compName, setCompName] = useState("");
 
-  // Step 3: Keywords
+  // Step 4: Keywords
   const [keywords, setKeywords] = useState<{ keyword: string; type: string; entity_name: string; entity_type: string }[]>([]);
   const [kwText, setKwText] = useState("");
   const [kwType, setKwType] = useState("brand");
@@ -74,6 +79,41 @@ export default function OnboardingPage() {
     }
   };
 
+  const addSpokesperson = () => {
+    if (!spName.trim()) return;
+    setSpokespersons(prev => [...prev, { name: spName, designation: spDesignation }]);
+    setSpName("");
+    setSpDesignation("");
+  };
+
+  const handleStep2 = async () => {
+    setLoading(true);
+    try {
+      for (const sp of spokespersons) {
+        await fetch("/api/spokespersons", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sp),
+        });
+      }
+      // Auto-add spokesperson names as keywords
+      setKeywords(prev => [
+        ...prev,
+        ...spokespersons.map(sp => ({
+          keyword: sp.name,
+          type: "spokesperson",
+          entity_name: sp.name,
+          entity_type: "spokesperson",
+        })),
+      ]);
+      setStep(2);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addCompetitor = () => {
     if (!compName.trim()) return;
     setCompetitors(prev => [...prev, { name: compName, type: "direct" }]);
@@ -82,7 +122,7 @@ export default function OnboardingPage() {
     setCompName("");
   };
 
-  const handleStep2 = async () => {
+  const handleStep3 = async () => {
     setLoading(true);
     try {
       for (const comp of competitors) {
@@ -92,7 +132,7 @@ export default function OnboardingPage() {
           body: JSON.stringify(comp),
         });
       }
-      setStep(2);
+      setStep(3);
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -111,7 +151,7 @@ export default function OnboardingPage() {
     setKwText("");
   };
 
-  const handleStep3 = async () => {
+  const handleStep4 = async () => {
     setLoading(true);
     try {
       if (keywords.length > 0) {
@@ -203,8 +243,43 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 2: Competitors */}
+            {/* Step 2: Spokespersons */}
             {step === 1 && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">Add key spokespersons for your brand. Their names will be auto-tracked as keywords.</p>
+                <div className="flex gap-2">
+                  <Input value={spName} onChange={e => setSpName(e.target.value)} placeholder="Name" className="flex-1" onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSpokesperson())} />
+                  <Input value={spDesignation} onChange={e => setSpDesignation(e.target.value)} placeholder="Designation" className="flex-1" onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSpokesperson())} />
+                  <Button type="button" variant="outline" onClick={addSpokesperson}><Plus className="w-4 h-4" /></Button>
+                </div>
+                {spokespersons.length > 0 && (
+                  <div className="space-y-2">
+                    {spokespersons.map((sp, i) => (
+                      <div key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <UserPlus className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm">{sp.name}</span>
+                          {sp.designation && <span className="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded-full text-gray-600">{sp.designation}</span>}
+                        </div>
+                        <button onClick={() => setSpokespersons(prev => prev.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Skip</Button>
+                  <Button onClick={handleStep2} disabled={loading} className="flex-1 bg-brand-sky hover:bg-brand-sky/90 text-white">
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Continue <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Competitors */}
+            {step === 2 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-500">Add your main competitors for comparison tracking.</p>
                 <div className="flex gap-2">
@@ -227,8 +302,8 @@ export default function OnboardingPage() {
                   </div>
                 )}
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Skip</Button>
-                  <Button onClick={handleStep2} disabled={loading} className="flex-1 bg-brand-sky hover:bg-brand-sky/90 text-white">
+                  <Button variant="outline" onClick={() => setStep(3)} className="flex-1">Skip</Button>
+                  <Button onClick={handleStep3} disabled={loading} className="flex-1 bg-brand-sky hover:bg-brand-sky/90 text-white">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Continue <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
@@ -236,8 +311,8 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 3: Keywords */}
-            {step === 2 && (
+            {/* Step 4: Keywords */}
+            {step === 3 && (
               <div className="space-y-4">
                 <p className="text-sm text-gray-500">Add keywords to monitor. We&apos;ve auto-added your brand name.</p>
                 <div className="flex gap-2">
@@ -245,6 +320,7 @@ export default function OnboardingPage() {
                   <select value={kwType} onChange={e => setKwType(e.target.value)} className="w-32 h-9 rounded-md border border-input bg-background px-2 text-sm">
                     <option value="brand">Brand</option>
                     <option value="product">Product</option>
+                    <option value="spokesperson">Spokesperson</option>
                     <option value="hashtag">Hashtag</option>
                     <option value="campaign">Campaign</option>
                   </select>
@@ -266,7 +342,7 @@ export default function OnboardingPage() {
                     ))}
                   </div>
                 )}
-                <Button onClick={handleStep3} disabled={loading} className="w-full bg-brand-sky hover:bg-brand-sky/90 text-white">
+                <Button onClick={handleStep4} disabled={loading} className="w-full bg-brand-sky hover:bg-brand-sky/90 text-white">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Complete Setup
                 </Button>
