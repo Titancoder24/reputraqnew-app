@@ -27,7 +27,7 @@ export function StatCard({
   const isNegative = change && change < 0;
 
   return (
-    <Card className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
+    <Card className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 animate-slide-up">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">

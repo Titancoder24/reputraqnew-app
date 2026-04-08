@@ -30,7 +30,7 @@ interface MentionCardProps {
 
 export function MentionCard({ result }: MentionCardProps) {
   return (
-    <Card className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition group">
+    <Card className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group">
       <CardContent className="p-4">
         <div className="flex gap-3">
           {/* Platform icon */}
