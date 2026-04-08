@@ -100,7 +100,7 @@ export async function batchSentimentAnalysis(
   apiKey: string,
   model: string,
   brandName: string,
-  results: { title: string; snippet: string; link: string; source: string }[]
+  results: { title: string; snippet: string; link: string; source_name?: string; platform?: string }[]
 ): Promise<SentimentResult[]> {
   const BATCH_SIZE = 15;
   const allResults: SentimentResult[] = [];
@@ -118,13 +118,14 @@ async function analyzeBatch(
   apiKey: string,
   model: string,
   brandName: string,
-  batch: { title: string; snippet: string; link: string; source: string }[]
+  batch: { title: string; snippet: string; link: string; source_name?: string; platform?: string }[]
 ): Promise<SentimentResult[]> {
   const items = batch.map((r, idx) => ({
     index: idx,
     title: r.title,
     snippet: r.snippet,
-    source: r.source,
+    source: r.source_name || "",
+    platform: r.platform || "",
     url: r.link,
   }));
 

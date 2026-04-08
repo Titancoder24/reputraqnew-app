@@ -96,15 +96,11 @@ export async function checkAlerts(
   // Log triggered alerts
   if (triggered.length > 0) {
     const logs = triggered.map((t) => ({
-      alert_rule_id: t.alert_rule_id,
       org_id: t.org_id,
-      trigger_type: t.trigger_type,
+      alert_rule_id: t.alert_rule_id,
+      result_id: t.result_id,
       channel: t.channel,
-      recipients: t.recipients,
-      search_result_id: t.result_id,
-      result_title: t.result_title,
-      result_link: t.result_link,
-      status: "pending",
+      message: `[${t.trigger_type}] ${t.result_title}: ${t.result_link}`,
     }));
 
     const { error: logError } = await supabase

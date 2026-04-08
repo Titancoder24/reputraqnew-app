@@ -22,10 +22,10 @@ async function getSerpApiKey(
   const { data } = await supabase
     .from("admin_settings")
     .select("value")
-    .eq("key", "serpapi_api_key")
+    .eq("key", "serpapi_key")
     .single();
 
-  const key = data?.value || process.env.SERPAPI_API_KEY;
+  const key = data?.value || process.env.SERPAPI_KEY;
   if (!key) {
     throw new Error("SerpAPI key not configured");
   }
@@ -134,7 +134,7 @@ async function scanOrganization(
     let serpapiCallsUsed = 0;
 
     // e. For each keyword, run searches
-    const allResults: (RawResult & { keyword_id: string })[] = [];
+    const allResults: RawResult[] = [];
     const keywordResultCounts: Record<string, number> = {};
 
     const region = org.regions?.[0] || "us";
@@ -178,9 +178,7 @@ async function scanOrganization(
 
         const combined = [...kwResults, ...newsResults];
         keywordResultCounts[kw.id] = combined.length;
-        allResults.push(
-          ...combined.map((r) => ({ ...r, keyword_id: kw.id }))
-        );
+        allResults.push(...combined);
       } catch (kwErr) {
         console.error(
           `Error scanning keyword "${kw.keyword}":`,
@@ -212,7 +210,8 @@ async function scanOrganization(
             title: r.title,
             snippet: r.snippet,
             link: r.link,
-            source: r.source,
+            source_name: r.source_name,
+            platform: r.platform,
           }))
         );
 
@@ -231,17 +230,17 @@ async function scanOrganization(
             org_id: org.id,
             scan_id: scanId,
             keyword_id: r.keyword_id,
-            keyword_text: r.keyword,
+            keyword_text: r.keyword_text,
             entity_type: r.entity_type,
             entity_name: r.entity_name,
-            source_type: r.result_type,
+            source_type: r.source_type,
             platform: r.platform,
             title: r.title,
             link: r.link,
             snippet: r.snippet,
-            source_name: r.source,
-            published_date: r.date || null,
-            thumbnail_url: r.thumbnail || null,
+            source_name: r.source_name,
+            published_date: r.published_date || null,
+            thumbnail_url: r.thumbnail_url || null,
             sentiment: sentiment.sentiment,
             sentiment_score: sentiment.sentiment_score,
             themes: sentiment.themes,
@@ -261,17 +260,17 @@ async function scanOrganization(
           org_id: org.id,
           scan_id: scanId,
           keyword_id: r.keyword_id,
-          keyword_text: r.keyword,
+          keyword_text: r.keyword_text,
           entity_type: r.entity_type,
           entity_name: r.entity_name,
-          source_type: r.result_type,
+          source_type: r.source_type,
           platform: r.platform,
           title: r.title,
           link: r.link,
           snippet: r.snippet,
-          source_name: r.source,
-          published_date: r.date || null,
-          thumbnail_url: r.thumbnail || null,
+          source_name: r.source_name,
+          published_date: r.published_date || null,
+          thumbnail_url: r.thumbnail_url || null,
           sentiment: "Neutral",
           sentiment_score: 0,
           themes: [],
