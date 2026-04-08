@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     const { data: results, error } = await supabase
       .from("search_results")
       .select(
-        "sentiment, sentiment_score, entity_type, entity_name, platform, source_type, reach_estimate, risk_flags"
+        "sentiment, sentiment_score, entity_type, entity_name, platform, source_type, reach_estimate, risk_flag"
       )
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
@@ -92,9 +92,8 @@ export async function GET(request: NextRequest) {
         source_types[r.source_type] = (source_types[r.source_type] || 0) + 1;
       }
 
-      // Risk flags
-      const flags: string[] = r.risk_flags || [];
-      if (flags.length > 0) risk_count++;
+      // Risk flag
+      if (r.risk_flag === true) risk_count++;
 
       // High reach
       if (r.reach_estimate === "high") high_reach_count++;

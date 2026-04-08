@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Fetch negative and risk-flagged results
     const { data: negativeResults, error: negError } = await supabase
       .from("search_results")
-      .select("title, snippet, source_name, platform, sentiment, sentiment_score, risk_flags, themes, collected_at")
+      .select("title, snippet, source_name, platform, sentiment, sentiment_score, risk_flag, themes, collected_at")
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
       .lte("collected_at", dateTo)
@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
     // Also fetch risk-flagged results regardless of sentiment
     const { data: riskResults, error: riskError } = await supabase
       .from("search_results")
-      .select("title, snippet, source_name, platform, sentiment, sentiment_score, risk_flags, themes, collected_at")
+      .select("title, snippet, source_name, platform, sentiment, sentiment_score, risk_flag, themes, collected_at")
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
       .lte("collected_at", dateTo)
-      .not("risk_flags", "eq", "{}");
+      .eq("risk_flag", true);
 
     if (riskError) {
       return NextResponse.json({ error: riskError.message }, { status: 500 });
@@ -108,7 +108,7 @@ ${JSON.stringify(
     platform: r.platform,
     sentiment: r.sentiment,
     score: r.sentiment_score,
-    risk_flags: r.risk_flags,
+    risk_flag: r.risk_flag,
     themes: r.themes,
   })),
   null,

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     const { data: riskMentions, error: riskError } = await supabase
       .from("search_results")
       .select(
-        "title, snippet, source_name, sentiment, sentiment_score, risk_flags, themes, collected_at"
+        "title, snippet, source_name, sentiment, sentiment_score, risk_flag, themes, collected_at"
       )
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
@@ -105,12 +105,12 @@ export async function POST(request: NextRequest) {
     const { data: flaggedMentions, error: flaggedError } = await supabase
       .from("search_results")
       .select(
-        "title, snippet, source_name, sentiment, sentiment_score, risk_flags, themes, collected_at"
+        "title, snippet, source_name, sentiment, sentiment_score, risk_flag, themes, collected_at"
       )
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
       .lte("collected_at", dateTo)
-      .not("risk_flags", "eq", "{}");
+      .eq("risk_flag", true);
 
     if (flaggedError) {
       return NextResponse.json(
@@ -165,7 +165,7 @@ ${JSON.stringify(
     source: r.source_name,
     sentiment: r.sentiment,
     score: r.sentiment_score,
-    risk_flags: r.risk_flags,
+    risk_flag: r.risk_flag,
     themes: r.themes,
     date: r.collected_at,
   })),

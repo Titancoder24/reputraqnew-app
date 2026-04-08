@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("search_results")
       .select(
-        "sentiment_score, source_type, reach_estimate, risk_flags"
+        "sentiment_score, source_type, reach_estimate, risk_flag"
       )
       .eq("org_id", profile.org_id)
       .gte("collected_at", dateFrom)
@@ -97,8 +97,7 @@ export async function GET(request: NextRequest) {
         highReachCount++;
       }
 
-      const flags: string[] = r.risk_flags || [];
-      if (flags.length > 0) {
+      if (r.risk_flag === true) {
         riskFlagCount++;
       }
     }
@@ -155,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     const { data: prevData, error: prevError } = await supabase
       .from("search_results")
-      .select("sentiment_score, source_type, reach_estimate, risk_flags")
+      .select("sentiment_score, source_type, reach_estimate, risk_flag")
       .eq("org_id", profile.org_id)
       .gte("collected_at", prevFrom.toISOString())
       .lte("collected_at", prevTo.toISOString());
@@ -189,7 +188,7 @@ export async function GET(request: NextRequest) {
 
         if (r.reach_estimate === "high") prevHighReach++;
 
-        const flags: string[] = r.risk_flags || [];
+        const flags: string[] = r.risk_flag || [];
         if (flags.length > 0) prevRiskFlags++;
       }
 
