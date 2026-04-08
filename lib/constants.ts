@@ -1,112 +1,65 @@
-/* ------------------------------------------------------------------ */
-/*  Plan configuration                                                 */
-/* ------------------------------------------------------------------ */
+import { type ChartConfig } from "@/components/ui/chart";
 
-export interface PlanFeatures {
-  max_keywords: number;
-  max_competitors: number;
-  features: string[];
-}
-
-export const PLAN_CONFIG: Record<string, PlanFeatures> = {
+export const PLAN_CONFIG = {
   starter: {
-    max_keywords: 5,
-    max_competitors: 2,
-    features: [
-      "Basic sentiment analysis",
-      "Weekly scans",
-      "Email alerts",
-      "Dashboard overview",
-    ],
+    max_keywords: 2,
+    max_competitors: 1,
+    features: {
+      reports: ["weekly"],
+      chatbot: false,
+      alerts: ["email"],
+      history_days: 30,
+      custom_searches: 5,
+    },
   },
   growth: {
-    max_keywords: 15,
-    max_competitors: 5,
-    features: [
-      "Advanced sentiment analysis",
-      "Daily scans",
-      "Email & webhook alerts",
-      "Dashboard overview",
-      "Competitor tracking",
-      "Share of Voice",
-      "CSV export",
-    ],
+    max_keywords: 5,
+    max_competitors: 3,
+    features: {
+      reports: ["weekly", "monthly"],
+      chatbot: true,
+      alerts: ["email", "slack"],
+      history_days: 90,
+      custom_searches: 20,
+    },
   },
   pro: {
-    max_keywords: 50,
-    max_competitors: 15,
-    features: [
-      "AI-powered sentiment analysis",
-      "Real-time scans",
-      "All alert channels",
-      "Full dashboard & analytics",
-      "Advanced competitor tracking",
-      "Share of Voice",
-      "Brand Position Score",
-      "Executive visibility tracking",
-      "CSV & PDF export",
-      "API access",
-      "Custom reports",
-    ],
+    max_keywords: 8,
+    max_competitors: 5,
+    features: {
+      reports: ["daily", "weekly", "monthly", "quarterly", "annually"],
+      chatbot: true,
+      alerts: ["email", "slack", "whatsapp", "sms"],
+      history_days: 365,
+      custom_searches: 50,
+    },
   },
 };
 
-/* ------------------------------------------------------------------ */
-/*  Chart configuration                                                */
-/* ------------------------------------------------------------------ */
+export const sentimentChartConfig = {
+  positive: { label: "Positive", color: "#10B981" },
+  negative: { label: "Negative", color: "#EF4444" },
+  neutral: { label: "Neutral", color: "#64748B" },
+  mixed: { label: "Mixed", color: "#F59E0B" },
+} satisfies ChartConfig;
 
-export type ChartConfig = Record<
-  string,
-  { label: string; color: string }
->;
-
-export const sentimentChartConfig: ChartConfig = {
-  Positive: {
-    label: "Positive",
-    color: "#22c55e",
-  },
-  Negative: {
-    label: "Negative",
-    color: "#ef4444",
-  },
-  Neutral: {
-    label: "Neutral",
-    color: "#6b7280",
-  },
-  Mixed: {
-    label: "Mixed",
-    color: "#f59e0b",
-  },
-};
-
-/* ------------------------------------------------------------------ */
-/*  Share of Voice chart colors                                        */
-/* ------------------------------------------------------------------ */
-
-export const sovChartColors: string[] = [
-  "#6366f1", // indigo
-  "#f43f5e", // rose
-  "#06b6d4", // cyan
-  "#f59e0b", // amber
-  "#8b5cf6", // violet
-  "#10b981", // emerald
-  "#ec4899", // pink
-  "#14b8a6", // teal
-  "#f97316", // orange
-  "#3b82f6", // blue
+export const sovChartColors = [
+  "#0093DD",
+  "#004163",
+  "#F59E0B",
+  "#10B981",
+  "#EF4444",
+  "#8B5CF6",
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Platform colors                                                    */
-/* ------------------------------------------------------------------ */
-
 export const platformColors: Record<string, string> = {
+  google_news: "#0093DD",
   reddit: "#FF4500",
   twitter: "#1DA1F2",
   youtube: "#FF0000",
   linkedin: "#0A66C2",
   quora: "#B92B27",
   instagram: "#E4405F",
+  web: "#64748B",
   facebook: "#1877F2",
-  web: "#6B7280",
 };
